@@ -4,7 +4,72 @@
 // author: gelx
 // license: isc
 
-const init = function setup (cfg) {
+const isObserable = value => {
+	return (value && value._$) ? true : false;
+};
+const Observable = (initialValue, readOnly = false) => {
+	if (isObserable(initialValue)) {
+		if (readOnly) {
+			return {
+				_$: true,
+				isObserable,
+				onChange: callback => {
+					initialValue.onChange(callback);
+				},
+				stream: callback => {
+					initialValue.stream(callback);
+				},
+				get value () {
+					return initialValue.value;
+				}
+			};
+		}
+		return initialValue;
+	}
+	if (readOnly) {
+		return Observable(Observable(initialValue, false), true);
+	}
+
+	let value = initialValue;
+	let listeners = [];
+
+	const registerListenerReturnUnbinder = callback => {
+		listeners.push(callback);
+		return () => {
+			listeners = listeners.filter(listenerCb => listenerCb !== callback);
+		};
+	}
+
+	return {
+		_$: true,
+		isObserable,
+		onChange: (callback) => {
+			return registerListenerReturnUnbinder(callback);
+		},
+		stream: (callback) => {
+			const unbinder = registerListenerReturnUnbinder(callback);
+			callback(value);
+			return unbinder;
+		},
+		get value () {
+			return value;
+		},
+		set value (newValue) {
+			let oldValue = value;
+			value = newValue;
+			listeners.forEach(listener => {
+				// Listeners can overwrite the current change by returning a truthy value to be used for further calls
+				let newValue = listener(value, oldValue)
+				if (newValue) {
+					oldValue = value;
+					value = newValue;
+				}
+			});
+		}
+	};
+}
+
+const init = function setup (cfg = {}) {
 	const config = {
 		version: 1.0,
 		debug: cfg.debug || false,
@@ -95,7 +160,7 @@ const init = function setup (cfg) {
 			throw new Error(`Circular dependency detected. Module '${moduleConfig.name}' is waiting for itself through '${waitingChain[waitingChain.length - 1]}'.`)
 		}
 		if (activeModules.hasOwnProperty(moduleConfig.name)) {
-			return Promise.resolve(activeModules[moduleConfig.name].value);
+			return Promise.resolve(activeModules[moduleConfig.name]);
 		}
 
 		if (moduleConfig.noCache !== true) {
@@ -106,37 +171,54 @@ const init = function setup (cfg) {
 		const dependencies = Promise.all(utils
 			.getArguments(moduleConfig.loadingFunction)
 			.map(dependencyExpression => {
-				const split = dependencyExpression.split('|');
-				const name = split[0];
+				const split = dependencyExpression.split('|'); // Yes, this doesn't work
+				const as$ = split[0].endsWith('$');
+				const name = as$ ? split[0].slice(0, -1) : split[0];
 				const version = split[1];
-				
+
 				return registrations.when(name)
 					.then(config => {
 						if (version && config.version !== version) {
 							throw new Error(`Version mismatch for '${name}": Expected ${version}, found ${config.version}`);
 						}
-						return config;
+						return { config, as$ };
 					});
-			}))
-			.then(dependencyConfigs => Promise
-				.all(dependencyConfigs
-					.map( dependencyConfig => loadModule(dependencyConfig, waitingChain)
-			)));
+			}));
 
 		const loadingModule = dependencies
-			.then(loadedDependencies => moduleConfig.loadingFunction(...loadedDependencies))
-			.then(resolvedModule => {
-				Log.debug(`Loaded '${moduleConfig.name}'`);
-				return resolvedModule;
+			.then(dependencies => {
+				return Promise.all(dependencies
+					.map(({ config, as$ }) => {
+						Log.debug(`Loading '${config.name}' as dependency of '${moduleConfig.name}'`);
+						return loadModule(config, waitingChain)
+							.then( moduleProperty => {
+								return { moduleProperty, as$ };
+							});
+				}));
 			});
 
-		if (moduleConfig.noCache !== true) {
-			activeModules[moduleConfig.name] = {
-				config: moduleConfig,
-				value: loadingModule
-			};
-		}
-		return loadingModule;
+		return loadingModule
+			.then(loadedDependencies => {
+				const $orValueDependencies = loadedDependencies.map(({ moduleProperty, as$ }) => {
+					return as$ ? moduleProperty.$ : moduleProperty.$.value;
+				});
+
+				return moduleConfig.loadingFunction(...$orValueDependencies);
+			})
+			.then(resolvedModule => {
+				const module$ = Observable(resolvedModule, moduleConfig.readOnly === true)
+				const loadedModule = {
+					config: moduleConfig,
+					$: module$
+				};
+
+				if (moduleConfig.noCache !== true) {
+					activeModules[moduleConfig.name] = loadedModule;
+				};
+
+				Log.debug(`Loaded '${moduleConfig.name}'`);
+				return loadedModule;
+			})
 	};
 
 	const external = (name, url) => {
@@ -172,12 +254,10 @@ const init = function setup (cfg) {
 		});
 	};
 
-	return { external, define, resolve };
+	return { external, define, resolve, Observable, isObserable };
 };
 
-if (typeof module === 'object' && typeof module.exports === 'object') {
-	module.exports = init;
-} else {
-	// const bunch = init();
-	// global.bunch = bunch;
+const bunch = init;
+if (typeof exports === "object") {
+  module.exports = bunch
 }
