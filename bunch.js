@@ -163,9 +163,14 @@ const init = function setup (cfg = {}) {
 			return Promise.resolve(activeModules[moduleConfig.name]);
 		}
 
+		let moduleLoadedCallback = function () {};
 		if (moduleConfig.noCache !== true) {
 			Log.debug(`Loading module ${moduleConfig.name}...`, waitingChain);
 			waitingChain = [...waitingChain, moduleConfig.name];
+
+			activeModules[moduleConfig.name] = new Promise((resolve, reject) => {
+				moduleLoadedCallback = resolve;
+			});
 		}
 
 		const dependencies = Promise.all(utils
@@ -213,6 +218,7 @@ const init = function setup (cfg = {}) {
 				};
 
 				if (moduleConfig.noCache !== true) {
+					moduleLoadedCallback(loadedModule);
 					activeModules[moduleConfig.name] = loadedModule;
 				};
 
