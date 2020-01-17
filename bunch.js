@@ -67,7 +67,26 @@ const Observable = (initialValue, readOnly = false) => {
 			});
 		}
 	};
-}
+};
+const ComputedObservable = function (observablesToWatch, computer) {
+	if (Array.isArray(observablesToWatch) === false) {
+		observablesToWatch = [observablesToWatch];
+	}
+	if (observablesToWatch.every(isObserable) === false) {
+		throw new Error('Cannot watch on non-observable values.');
+	}
+
+	const computeValue = function () {
+		let values = observablesToWatch.map(obs$ => obs$.value);
+		return computer(...values);
+	}
+
+	const obs$ = Observable(computeValue());
+	observablesToWatch.forEach(obs => obs.onChange(function () {
+		obs$.value = computeValue();
+	}));
+	return obs$;
+};
 
 const init = function setup (cfg = {}) {
 	const config = {
@@ -259,6 +278,9 @@ const init = function setup (cfg = {}) {
 			loadingFunction: fn
 		});
 	};
+
+	define('Observable', function () { return Observable });
+	define('ComputedObservable', function () { return ComputedObservable });
 
 	return { external, define, resolve, Observable, isObserable };
 };

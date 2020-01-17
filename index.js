@@ -41,7 +41,7 @@ const bunch = require('./bunch')({ debug: true });
 
 // bunch.define('hi', () => 'world' );
 
-bunch.define('TestDep', [{readOnly: true}, function () {
+bunch.define('TestDep', [{readOnly: false}, function () {
 
 	let me$ = bunch.Observable({
 		a: 'a',
@@ -58,12 +58,27 @@ bunch.define('TestDep', [{readOnly: true}, function () {
 	return me$;
 }])
 
-bunch.resolve(function (TestDep$) {
+bunch.define('TestDep2Computed', function (TestDep$, ComputedObservable) {
+	return ComputedObservable(TestDep$, function (TestDep) {
+		return {
+			...TestDep,
+			blaaa: 'asdf'
+		};
+	});
+})
+
+
+bunch.resolve(function (TestDep$, TestDep2Computed$) {
+
+	TestDep2Computed$.onChange(function (value) {
+		console.log('TestDep2Computed changed: ', value);
+	});
+
 	console.log('testDep$; ', TestDep$);
 	TestDep$.value = { a: 'no', b: 'yeah' }
 
 	bunch.resolve(function (TestDep) {
-		console.log('testDep2: ', TestDep)
+		console.log('testDep2: ', TestDep);
 	})
 })
 
