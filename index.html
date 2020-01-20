@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="description" content="tt.js simple tracking">
+		<meta name="author" content="gelx">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<!-- <link href="https://fonts.googleapis.com/css?family=Quicksand:300,400,600&display=swap&subset=latin-ext" rel="stylesheet"> -->
+
+   		<script type="text/javascript" src="./bunch.js"></script>
+   		<script type="text/javascript" src="./tt.js"></script>
+   		<style type="text/css">
+   			html {
+   				height: 100%;
+   			}
+
+   			a {
+   				color: #E6AF2E;
+   			}
+
+   			h2 {
+   				font-weight: 300;
+   			}
+
+   			body {
+   				margin: 0;
+   				height: 100%;
+
+   				display: flex;
+   				flex-flow: column nowrap;
+
+   				font-family: 'Quicksand', sans-serif;
+				background-color: black;
+				color: #F7F0F5;
+   			}
+
+   			#header {
+   				align-self: stretch;
+   				flex-shrink: 1;
+
+   				padding: 0 1em;
+
+   				background-color: #2E3532;
+   				border-bottom: 1px solid #3CBBB1;
+   				color: #F1E9DB;
+   			}
+
+   			#content {
+   				flex-grow: 1;
+   				align-self: stretch;
+
+   				padding: 1em 0;
+   				display: flex;
+   				flex-flow: row nowrap;
+   			}
+
+   			#content_left {
+   				flex: 1;
+               display: flex;
+               flex-direction: column;
+   				padding: 0 1em;
+   				border-right: 1px solid #3CBBB1;
+   			}
+
+   			#content_right {
+   				flex: 1;
+   				padding: 0 1em;
+   			}
+
+
+   			.column_heading {
+   				text-align: center;
+   			}
+
+   			#time_select {
+   				display: flex;
+   				flex-flow: row nowrap;
+   				justify-content: space-around;
+   			}
+
+            #time_select > * {
+               display: flex;
+               flex-flow: row nowrap;
+               align-items: center;
+            }
+
+   			#canvas_holder {
+               flex-grow: 1;
+               background-color: white;
+            }
+
+            #entries_canvas {
+               width: 100%;
+               height: 100%;
+            }
+
+   			#footer {
+   				align-self: stretch;
+   				flex-shrink: 1;
+
+   				display: flex;
+   				flex-flow: column nowrap;
+
+   				border-top: 1px solid #3CBBB1;
+   			}
+
+   			#footer_links-right {
+   				align-self: flex-end;
+   			}
+   		</style>
+	</head>
+
+	<body>
+		<div id="header">
+			<h2>tt.js - simple tracking</h2>
+		</div>
+		<div id="content">
+			<div id="content_left">
+            <h2 class="column_heading">when</h2>
+            <div id="time_select">
+               <div id="time_select_left">
+                  <input type="time">
+               </div>
+               <div id="time_select_now">
+                  <h2 id="time_select_now_clock"></h2>
+               </div>
+               <div id="time_select_right">
+                  <input type="time">
+               </div>
+            </div>
+            <div id="canvas_holder">
+               <canvas id="entries_canvas"></canvas>
+            </div>
+         </div>
+			<div id="content_right">
+				<p>
+					Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.   
+
+					Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet,
+				</p>
+			</div>
+		</div>
+		<div id="footer">
+			<div id="footer_links-right">
+				<a href="./impressum.html">Impressum</a>
+			</div>
+		</div>
+	</body>
+</html>
