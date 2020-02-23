@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="description" content="tt.js simple tracking">
+		<meta name="author" content="gelx">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<!-- <link href="https://fonts.googleapis.com/css?family=Quicksand:300,400,600&display=swap&subset=latin-ext" rel="stylesheet"> -->
+
+   		<script type="text/javascript" src="../bunch.js"></script>
+   		<script type="text/javascript" src="../bnc.js"></script>
+   		<script type="text/javascript" src="./user.js"></script>
+   		<style type="text/css">
+		</style>
+	</head>
+	<body>
+		<bnc-root>
+			<div id="main_content">
+				<bnc-module id="tracker_container" name="testModule">
+					<div class="tracker_row">
+						<!-- <p bnc-if="showHello">Hi there :)</p> -->
+						<p bnc-bind="nowString"></p>
+					</div>
+
+					<p bnc-template>Currently the time ` + alert('whoops') ` is ${now} ms after epoch_start. And ${for.bidde.wn} or ${this()}</p>
+
+					<div bnc-for="value in testArr">
+						<p bnc-bind="value"></p>
+					</div>
+				</div>
+			</div>
+		</bnc-root>
+	</body>
+</html>
