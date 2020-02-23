@@ -1,8 +1,4 @@
-// bunch.js - v1.0
-// compact javascript bundler
-// ---------------
-// author: gelx
-// license: isc
+/* bunch.js - compact javascript dependency injection */
 
 const bunch = (function () {
 	const isObserable = value => {
@@ -15,10 +11,10 @@ const bunch = (function () {
 					_$: true,
 					isObserable,
 					onChange: callback => {
-						initialValue.onChange(callback);
+						return initialValue.onChange(callback);
 					},
 					stream: callback => {
-						initialValue.stream(callback);
+						return initialValue.stream(callback);
 					},
 					get value () {
 						return initialValue.value;
@@ -122,6 +118,10 @@ const bunch = (function () {
 			            });
 			        })
 			        .filter(String);
+			},
+			getArgumentsFromModuleConfig: config => {
+				const usingFuncArgs = !config.dependencies;
+				return usingFuncArgs ? utils.getArguments(config.loadingFunction) : config.dependencies;
 			}
 		};
 
@@ -195,7 +195,6 @@ const bunch = (function () {
 
 			let moduleLoadedCallback = function () {};
 			if (moduleConfig.noCache !== true) {
-				// Log.debug(`Loading module ${moduleConfig.name}...`, waitingChain);
 				waitingChain = [...waitingChain, moduleConfig.name];
 
 				activeModules[moduleConfig.name] = new Promise((resolve, reject) => {
@@ -204,7 +203,7 @@ const bunch = (function () {
 			}
 
 			const dependencies = Promise.all(utils
-				.getArguments(moduleConfig.loadingFunction)
+				.getArgumentsFromModuleConfig(moduleConfig)
 				.map(dependencyExpression => {
 					const split = dependencyExpression.split('|'); // Yes, this doesn't work
 					const as$ = split[0].endsWith('$');
@@ -255,7 +254,7 @@ const bunch = (function () {
 					};
 
 					const loadingTime = window.performance.now() - loadStart;
-					const shift = Math.floor(Math.log(loadingTime * 5 || 1)) + 1;
+					const shift = parseInt(Math.log(loadingTime * 5 || 1)) + 1;
 					Log.debug(`${moduleConfig.name.padEnd(20, ' ')} | ${Array(moduleConfig.id).join(' . ')} *`.padEnd(25 + config.maxId * 3, '   ')
 							+ ` | ${Array(shift).join('~')} ${loadingTime.toString().substring(0, 5)} ms`);
 					return loadedModule;
@@ -285,7 +284,10 @@ const bunch = (function () {
 			registrations.register(config);
 		};
 
-		const resolve = fn => {
+		const resolve = (...args) => {
+			const hasExplicitDeps = Array.isArray(args[0]);
+			let fn = hasExplicitDeps ? args[1] : args[0];
+			let deps = hasExplicitDeps ? args[0] : undefined;
 			if (typeof fn !== 'function') {
 				throw new Error(`Argument is not of type function. Usage:\n    bunch.resolve( function (...dependencies) { /* your code */ })`);
 			}
@@ -294,19 +296,30 @@ const bunch = (function () {
 				name: `resolve-${resolveId}`,
 				id: resolveId,
 				noCache: true,
-				loadingFunction: fn
+				loadingFunction: fn,
+				dependencies: deps
+			});
+		};
+
+		const loadModules = (moduleNames) => {
+			return new Promise((pResolve, pReject) => {
+				resolve(moduleNames, function (...modules) {
+					pResolve(modules);
+				});
 			});
 		};
 
 		define('Observable', function () { return Observable });
 		define('ComputedObservable', function () { return ComputedObservable });
 
-		return { external, define, resolve, Observable, isObserable, debug: config.debug };
+		return { external, define, resolve, loadModules, Observable, ComputedObservable, isObserable, debug: config.debug };
 	};
 
 	return init;
 }());
 
 if (typeof exports === "object") {
-  module.exports = bunch
+ 	module.exports = bunch
+} else {
+	window.bunch = bunch;
 }
