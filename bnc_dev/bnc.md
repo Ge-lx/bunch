@@ -8,21 +8,21 @@ Special HTML Tags are prefixed like bnc-
 
 	Marks the root of the bnc-app
 
- [✓] <bnc-module>
+ [✓] `<bnc-module>`
 
 	Bind bunch modules with <bnc-module name="moduleName"> (modules can be observable)
 	Consider in the following a module like:
 
-	```
+	
 	moduleName: {
 		hello: 'world',
 		someArray: ['A', 'B', 'C'],
 		someObj: { a: 1, b: 2, c: 3 },
 		bool: false
 	}
-	```
+	
 
- [✓] <bnc-for>
+ [✓] `<bnc-for>`
  
  	Iterare objects or arrays. Has to contain exactly one child element, which will be repeatet.
 
@@ -40,6 +40,7 @@ Special HTML Tags are prefixed like bnc-
 Special attributes are prefixed with a $
 They are evaluated in the scope of their nearest enclosing <bnc->
 
+```
  [✓] bnc-bind 		Bind 'textContent' of node
 
  [✓] bnc-css 		Bind 'style' of node
@@ -50,3 +51,4 @@ They are evaluated in the scope of their nearest enclosing <bnc->
  [x] $else 			Can follow an $if like <div $if="something"> 
 
  [✓] bnc-template	Use ${placeholders} in the textContent
+```
