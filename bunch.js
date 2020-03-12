@@ -237,7 +237,7 @@ const bunch = (function () {
 					const $orValueDependencies = loadedDependencies.map(({ moduleProperty, as$ }) => {
 						return as$ ? moduleProperty.$ : moduleProperty.$.value;
 					});
-					Log.debug(`${moduleConfig.name.padEnd(20, ' ')} | ${Array(moduleConfig.id).join(' . ')} V`.padEnd(25 + config.maxId * 3, '   ') + ' |');
+					Log.debug(`${moduleConfig.name} | Loading ....... V`);
 					loadStart = window.performance.now();
 					return moduleConfig.loadingFunction(...$orValueDependencies);
 				})
@@ -255,8 +255,7 @@ const bunch = (function () {
 
 					const loadingTime = window.performance.now() - loadStart;
 					const shift = parseInt(Math.log(loadingTime * 5 || 1)) + 1;
-					Log.debug(`${moduleConfig.name.padEnd(20, ' ')} | ${Array(moduleConfig.id).join(' . ')} *`.padEnd(25 + config.maxId * 3, '   ')
-							+ ` | ${Array(shift).join('~')} ${loadingTime.toString().substring(0, 5)} ms`);
+					Log.debug(`${moduleConfig.name} | Loaded after ${Array(shift).join('~')} ${loadingTime.toString().substring(0, 5)} ms`);
 					return loadedModule;
 				})
 		};
