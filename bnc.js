@@ -161,21 +161,29 @@
 				.then(() => $activate(directives, element));
 		};
 
+		const $rebuild = () => { 
+			const $element = document.querySelector('bnc-root').parentElement
+			$destroy($element);
+			if (Object.keys(scope_map).length > 0) {
+				console.error('$destory() on $rootElement did not empty scope_map: ', scope_map);
+				scope_map = {};
+			}
+			return $rebuildSubtree($element);
+		};
+
+		const $refresh = () => {
+			if (Object.keys(scope_map).length > 0) {
+				return $rebuild();
+			}
+		};
+
 		return {
 			$link,
 			$nearest,
 			$destroy,
 			scope_map,
 			$rebuildSubtree,
-			$rebuild () { 
-				const $element = document.querySelector('bnc-root').parentElement
-				$destroy($element);
-				if (scope_map.length > 0) {
-					console.error('$destory() on $rootElement did not empty scope_map: ', scope_map);
-					scope_map = [];
-				}
-				return $rebuildSubtree($element);
-			},
+			$rebuild,
 			$controller (selector, handler) {
 				console.log(`$controller registered for selector ${selector}`);
 				controllers.push({
@@ -189,6 +197,7 @@
 							});
 					}
 				});
+				$refresh();
 			},
 			$directive (selector, handler) { 
 				console.log(`$directive registered for selector ${selector}`);
@@ -196,6 +205,7 @@
 					selector,
 					handler: (element, nearest) => Promise.resolve(handler(element, nearest))
 				});
+				$refresh();
 			}
 		};
 	});

@@ -254,8 +254,7 @@ const bunch = (function () {
 					};
 
 					const loadingTime = window.performance.now() - loadStart;
-					const shift = parseInt(Math.log(loadingTime * 5 || 1)) + 1;
-					Log.debug(`${moduleConfig.name} | Loaded after ${Array(shift).join('~')} ${loadingTime.toString().substring(0, 5)} ms`);
+					Log.debug(`${moduleConfig.name} | Loaded after ${loadingTime.toString().substring(0, 5)} ms`);
 					return loadedModule;
 				})
 		};
