@@ -384,9 +384,10 @@
 		});
 	});
 
-	resolve(function bnc_ready (bnc, bnc_root, bnc_module, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) {
+	define('bnc_ready', function (bnc, bnc_root, bnc_module, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) {
 		bnc.$rebuild();
 	});
+	loadModules(['bnc_ready']);
 
 	window.bnc_bunch = bnc_bunch;
 }());
