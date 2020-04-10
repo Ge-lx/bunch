@@ -17,7 +17,7 @@
 	</head>
 	<body>
 		<bnc-root>
-			<div id="main_content">
+			<!-- <div id="main_content">
 				<bnc-module id="tracker_container" name="testModule">
 					<div class="tracker_row">
 						<p bnc-bind="nowString"></p>
@@ -37,7 +37,12 @@
 						</div>
 					</div>
 				</bnc-module>
-			</div>
+			</div> -->
+			<bnc-module name="router">
+				<button data-name="test">Test</button>
+				<button data-name="another">Another</button>
+				<bnc-state name="currentState$"></bnc-state>
+			</bnc-module>
 		</bnc-root>
 	</body>
 </html>

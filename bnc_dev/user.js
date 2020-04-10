@@ -1,4 +1,68 @@
-const { define, resolve, Observable, ComputedObservable } = bnc_bunch;
+const { define, resolve, Observable, ComputedObservable, loadModules } = bnc_bunch;
+
+define('router', () => {
+	const currentState$ = Observable('testState');
+	const onClick = e => {
+		switch (e.target.getAttribute('data-name')) {
+			case 'test': currentState$.value = 'testState'; break;
+			case 'another': currentState$.value = 'anotherState'; break;
+		}
+	};
+
+	return {
+		currentState$,
+		$link: ($scope, element) => {
+			element.addEventListener('click', onClick);
+			$scope.onDestroy(() => element.removeEventListener('click', onClick));
+		}
+	};
+});
+
+define('testState', (now$) => {
+	const normalModuleAttrs = {
+		now$,
+		hello: 'world',
+		arr: [1, 2, 3, 4]
+	};
+
+	return {
+		$template: `
+			<h1 bnc-bind="hello"></h1>
+			<bnc-module name="test2">
+				<div bnc-for="item in testArr">
+					<p bnc-bind="item"></p>
+				</div>
+			</bnc-module>
+		`,
+		$link: ($scope, element) => {
+
+		},
+		...normalModuleAttrs
+	};
+});
+
+define('anotherState', (now$) => {
+	const normalModuleAttrs = {
+		now$,
+		hello: 'Another',
+		arr: [1, 2, 3, 4]
+	};
+
+	return {
+		$template: `
+			<h1 bnc-bind="hello"></h1>
+			<bnc-module name="test2">
+				<div bnc-for="item in testArr">
+					<p bnc-bind="item"></p>
+				</div>
+			</bnc-module>
+		`,
+		$link: ($scope, element) => {
+
+		},
+		...normalModuleAttrs
+	};
+});
 
 define('now', function () {
     const now$ = Observable(Date.now());
@@ -6,7 +70,7 @@ define('now', function () {
     	a = window.performance.now();
         now$.value = Date.now();
         b = window.performance.now() - a;
-        console.log(`${String(b * 1000).substr(0, 4)} us`);
+        // console.log(`${String(b * 1000).substr(0, 4)} us`);
         setTimeout(updateTime, 1000);
     };
 
