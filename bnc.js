@@ -9,13 +9,23 @@
 		return () => ++id;
 	}());
 
-	const getElementDepth = el => {
-		var depth = 0
-		while (el.parentElement !== null) {
-			el = el.parentElement;
-			depth++;
-		}
-		return depth;
+	(function augmentPromise () {
+		Promise.try = (handler, ...args) => {
+			try {
+				if (args.length > 0) {
+					handler = handler.bind(null, ...args);
+				}
+				var value = handler();
+				if (value instanceof Promise) {
+					return value;
+				} else {
+					return Promise.resolve(value);	
+				}
+			} catch (error) {
+				return Promise.reject(error);
+			}
+		};
+	}());
 	};
 
 	const bnc_scope = ($, $parent) => {
@@ -114,26 +124,27 @@
 			return bncModuleId ? scope_map[bncModuleId] : null;
 		};
 
-		const $activate = (handlers, element) => {
-			const loaderList = [];
+		const $activateChildren = (handlers, element, activateElement = false) => {
+			const pendingActivations = [];
 
-			handlers.forEach(({ selector, handler }) => {
-				element.querySelectorAll(selector)
-					.forEach(element => {
-						loaderList.push({
-							depth: getElementDepth(element),
-							activate: () => handler(element, $nearest(element))
-						});
-					});
-			});
+			if (activateElement) {
+				handlers.forEach(({ selector, handler }) => {
+					if (element.matches(selector)) {
+						pendingActivations.push(handler(element, $nearest(element)))
+					}
+				});
+			}
 
-			loaderList.sort((a, b) => {
-				a.depth - b.depth;
-			});
+			return Promise.all(pendingActivations)
+				.then(() => {
+					const childrenActivations = [];
 
-			return loaderList.reduce((prevPromise, loader) => {
-				return prevPromise.then(loader.activate);
-			}, Promise.resolve());
+					for (let child of element.children) {
+						childrenActivations.push($activateChildren(handlers, child, true));
+					}
+
+					return Promise.all(childrenActivations);
+				});
 		};
 
 		const $destroy = (element) => {
@@ -157,8 +168,8 @@
 
 		const $rebuildSubtree = (element) => {
 			return Promise.resolve()
-				.then(() => $activate(controllers, element))
-				.then(() => $activate(directives, element));
+				.then(() => $activateChildren(controllers, element))
+				.then(() => $activateChildren(directives, element));
 		};
 
 		const $rebuild = () => { 
@@ -189,7 +200,7 @@
 				controllers.push({
 					selector,
 					handler: (element, nearest) => {
-						return Promise.resolve(handler(element, nearest))
+						return Promise.try(handler, element, nearest)
 							.then(bnc_module => {
 								if (bnc_module) {
 									$link(bnc_module, element);	
@@ -203,7 +214,7 @@
 				console.log(`$directive registered for selector ${selector}`);
 				directives.push({
 					selector,
-					handler: (element, nearest) => Promise.resolve(handler(element, nearest))
+					handler: (element, nearest) => Promise.try(handler, element, nearest)
 				});
 				$refresh();
 			}
