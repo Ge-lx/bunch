@@ -104,8 +104,7 @@ const bunch = (function () {
 				return () => (id > config.maxId) ? (id = 1) : (++id);
 			}()),
 			getArguments: (func) => {
-			    const ARROW = true;
-			    const FUNC_ARGS = ARROW ? /^(function)?\s*[^\(]*\(\s*([^\)]*)\)/m : /^(function)\s*[^\(]*\(\s*([^\)]*)\)/m;
+			    const FUNC_ARGS = /^(function)?\s*[^\(]*\(\s*([^\)]*)\)/m;
 			    const FUNC_ARG_SPLIT = /,/;
 			    const FUNC_ARG = /^\s*(_?)(.+?)\1\s*$/;
 			    const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;

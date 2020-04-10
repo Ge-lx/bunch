@@ -14,7 +14,7 @@ define('now', function () {
     return now$;
 });
 
-define('testModule', function (now$) {
+define('testModule', (now$) => {
 	let last = false;
 	let a = 0;
 	return ComputedObservable(now$, function (now) {

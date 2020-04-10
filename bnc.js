@@ -85,7 +85,7 @@
 		};
 	};
 
-	define('debounce', function () {
+	define('debounce', () => {
 	    return (delay, callee) => {
 	        let lastCall = Date.now() - delay;
 	        return (...args) => {
@@ -100,13 +100,13 @@
 	    };
 	});
 
-	define('bnc_docready', function () {
+	define('bnc_docready', () => {
 	    return new Promise((pResolve, pReject) => {
 	        document.addEventListener("DOMContentLoaded", pResolve);
 	    });
 	});
 
-	define('bnc', function () {
+	define('bnc', () => {
 		let scope_map = {};
 		const controllers = [];
 		const directives = [];
@@ -220,8 +220,8 @@
 		};
 	});
 
-	define('bnc_root', function (bnc) {
-		return bnc.$controller('bnc-root', function (element) {
+	define('bnc_root', (bnc) => {
+		return bnc.$controller('bnc-root', (element) => {
 			return {
 				id: 'root',
 				$destroy () {},
@@ -231,7 +231,7 @@
 		});
 	});
 
-	define('bnc_module', function (bnc) {
+	define('bnc_module', (bnc) => {
 		return bnc.$controller('bnc-module', (element, bnc_parent) => {
 			const attrName = element.getAttribute('name');
 			if (!attrName) {
@@ -253,7 +253,7 @@
 		});
 	});
 
-	define('bnc_for', function (bnc) {
+	define('bnc_for', (bnc) => {
 		const OBJ_REGEX = /^([$A-Z_][0-9A-Z_$]*), ([$A-Z_][0-9A-Z_$]*) of ([$A-Z_][0-9A-Z_$]*)$/i;
 		const ARR_REGEX = /^(?:([$A-Z_][0-9A-Z_$]*), )?([$A-Z_][0-9A-Z_$]*) in ([$A-Z_][0-9A-Z_$]*)$/i;
 
@@ -327,7 +327,7 @@
 		});
 	});
 
-	define('bnc_bind', function (bnc) {
+	define('bnc_bind', (bnc) => {
 		return bnc.$directive('[bnc-bind]', (element, nearestModule) => {
 			const identifier = element.getAttribute('bnc-bind');
 			nearestModule.$watcher(identifier, value => {
@@ -336,7 +336,7 @@
 		});
 	});
 
-	define('bnc_css', function (bnc) {
+	define('bnc_css', (bnc) => {
 		return bnc.$directive('[bnc-css]', (element, nearestModule) => {
 			const identifier = element.getAttribute('bcn-css');
 			nearestModule.$watcher(identifier, value => {
@@ -345,7 +345,7 @@
 		});
 	});
 
-	define('bnc_class', function (bnc) {
+	define('bnc_class', (bnc) => {
 		return bnc.$directive('[bnc-class]', (element, nearestModule) => {
 			const identifier = element.getAttribute('bnc-class');
 			nearestModule.$watcher(identifier, value => {
@@ -355,7 +355,7 @@
 		});
 	});
 
-	define('bnc_if', function (bnc) {
+	define('bnc_if', (bnc) => {
 		return bnc.$directive('[bnc-if]', (element, nearestModule) => {
 			const identifier = element.getAttribute('bnc-if');
 			nearestModule.$watcher(identifier, value => {
@@ -364,7 +364,7 @@
 		});
 	});
 
-	define('bnc_template', function (bnc, debounce) {
+	define('bnc_template', (bnc, debounce) => {
 		const TEMPLATE_REGEX = /\${[$A-Z_][0-9A-Z_$]*}/gmi
 		const ILLEGAL_PLACEHOLDERS = /\${(?:[0-9A-Z_$]*[^0-9A-Z_${}]+[0-9A-Z_$]*)+}/gi
 
@@ -394,7 +394,7 @@
 		});
 	});
 
-	define('bnc_ready', function (bnc, bnc_root, bnc_module, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) {
+	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
 		bnc.$rebuild();
 	});
 	loadModules(['bnc_ready']);
