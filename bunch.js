@@ -94,7 +94,7 @@ const bunch = (function () {
 		const config = {
 			version: 1.0,
 			debug: cfg.debug || false,
-			registrationTimeout: cfg.registrationTimeout || 5000,
+			registrationTimeout: cfg.registrationTimeout || 1000,
 			maxId: cfg.maxId || 50
 		};
 
@@ -298,18 +298,15 @@ const bunch = (function () {
 			});
 		};
 
-		const loadModules = (moduleNames) => {
-			return new Promise((pResolve, pReject) => {
-				resolve(moduleNames, function (...modules) {
-					pResolve(modules);
-				});
-			});
-		};
+		const load = (name, as$ = true) => registrations
+			.when(name)
+			.then(config => loadModule(config))
+			.then(loadedModule => as$ ? loadedModule.$ : loadedModule.$.value);
 
 		define('Observable', function () { return Observable });
 		define('ComputedObservable', function () { return ComputedObservable });
 
-		return { external, define, resolve, loadModules, Observable, ComputedObservable, isObserable, debug: config.debug };
+		return { external, define, resolve, load, Observable, ComputedObservable, isObserable, debug: config.debug };
 	};
 
 	return init;

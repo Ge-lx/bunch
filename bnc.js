@@ -2,7 +2,7 @@
 
 (function () {
 	const bnc_bunch = bunch({ debug: true });
-	const { define, resolve, loadModules, Observable, ComputedObservable, debug } = bnc_bunch;
+	const { define, resolve, load, Observable, ComputedObservable, debug } = bnc_bunch;
 
 	const ID = (function () {
 		let id = 1;
@@ -77,7 +77,7 @@
 			$destroy () { onDestroyCallbacks.forEach(cb => cb()); },
 			$get (identifier) {
 				if ($.value.hasOwnProperty(identifier)) {
-					return $.value[identifier];
+					return Observable($.value[identifier]).value;
 				} else {
 					return $parent.$get(identifier);
 				}
@@ -111,10 +111,18 @@
 		const controllers = [];
 		const directives = [];
 
-		const $link = (bnc_module, element) => {
-			const idString = `$${bnc_module.id}`
+		const $link = (bnc_scope, element) => {
+			const idString = `$${bnc_scope.id}`
 			element.setAttribute('bnc-id', idString);
-			scope_map[idString] = bnc_module;
+			scope_map[idString] = bnc_scope;
+		};
+
+		const $unlink = (element) => {
+			const idFromElem = element.getAttribute('bnc-id');
+			element.removeAttribute('bnc-id');
+			const scope = scope_map[idFromElem];
+			delete scope_map[idFromElem];
+			return scope;
 		};
 
 		const $nearest = (element) => {
@@ -146,23 +154,18 @@
 				});
 		};
 
-		const $destroy = (element) => {
-			const getAndRemoveId = element => {
-				const id = element.getAttribute('bnc-id');
-				element.removeAttribute('bnc-id');
-				return id;
+		const $destroy = (element, includeElement = false) => {
+			const unbindAndDestroy = element => {
+				const scope = $unlink(element);
+				scope.$destroy();
 			};
 
 			const childBncModuleElements = element.querySelectorAll('[bnc-id]');
-			const idsToDestroy = [];
-			childBncModuleElements.forEach(element => idsToDestroy.push(getAndRemoveId(element)));
+			childBncModuleElements.forEach(unbindAndDestroy);
 
-			idsToDestroy.forEach(idToDestroy => {
-				if (idToDestroy) {
-					scope_map[idToDestroy].$destroy();
-					delete scope_map[idToDestroy];
-				}
-			});
+			if (includeElement) {
+				unbindAndDestroy(element);
+			}
 		};
 
 		const $rebuildSubtree = (element) => {
@@ -189,6 +192,7 @@
 
 		return {
 			$link,
+			$unlink,
 			$nearest,
 			$destroy,
 			scope_map,
@@ -233,23 +237,56 @@
 
 	define('bnc_module', (bnc) => {
 		return bnc.$controller('bnc-module', (element, bnc_parent) => {
-			const attrName = element.getAttribute('name');
-			if (!attrName) {
+			const moduleName = element.getAttribute('name');
+			if (!moduleName) {
 				console.error(`Missing 'name' attribute on <bnc-module> tag: `, element);
 				return;
 			}
-			const moduleName = attrName.endsWith('$') ? attrName : attrName + '$';
-			let $destroy = null;
+			return load(moduleName)
+				.then((module$) => {
+					const scope = bnc_scope(module$, bnc_parent);
 
-			return loadModules([moduleName]).then((loadedModules) => {
-				const module$ = loadedModules[0];
-				const scope = bnc_scope(module$, bnc_parent);
+					if (typeof module$.value.$link === 'function') {
+						module$.value.$link(scope, element);
+					}
+					return scope;
+				})
+				.catch(error => console.error(`Failed to load module ${moduleName}`));
+		});
+	});
 
-				if (typeof module$.value.$link === 'function') {
-					module$.value.$link(scope, element);
-				}
-				return scope;
-			});
+	define('bnc_state', (bnc) => {
+		bnc.$controller('bnc-state', (element, $nearest) => {
+			const identifier = element.getAttribute('name');
+			
+			let currentScope = null;
+			const updateScope = stateName => load(stateName)
+				.then(module$ => {
+					if (currentScope !== null) {
+						bnc.$destroy(element, true);
+					}
+					currentScope = bnc_scope(module$, $nearest);
+					if (typeof module$.value.$link === 'function') {
+						module$.value.$link(currentScope, element);
+					}
+
+					const template = module$.value.$template;
+					if (typeof template !== 'string') {
+						console.error(`bnc-router - state ${name} does not define a $template`);
+						return;
+					}
+					element.innerHTML = template;
+					bnc.$link(currentScope, element);
+				});
+			
+			$nearest.$watcher(identifier, stateName => {
+				return updateScope(stateName)
+					.then(() => bnc.$rebuildSubtree(element))
+					.catch(error => console.error(`bnc-router - could not find ${stateName}`));
+			}, false);
+
+			return updateScope($nearest.$get(identifier))
+				.catch(error => console.error(`bnc-router - could not find ${stateName}`));
 		});
 	});
 
@@ -321,7 +358,7 @@
 					bnc.$rebuildSubtree(element);
 				}, false);
 
-				createChildren(Observable(nearestModule.$get(identifier)).value);
+				createChildren(nearestModule.$get(identifier));
 				resolve();
 			});
 		});
@@ -394,10 +431,10 @@
 		});
 	});
 
-	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
+	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_state, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
 		bnc.$rebuild();
 	});
-	loadModules(['bnc_ready']);
+	load('bnc_ready');
 
 	window.bnc_bunch = bnc_bunch;
 }());
