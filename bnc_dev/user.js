@@ -67,11 +67,12 @@ define('anotherState', (now$) => {
 define('now', function () {
     const now$ = Observable(Date.now());
     const updateTime = () => {
-    	a = window.performance.now();
+    	setTimeout(updateTime, 1000);
+    	// a = window.performance.now();
         now$.value = Date.now();
-        b = window.performance.now() - a;
+        // b = window.performance.now() - a;
         // console.log(`${String(b * 1000).substr(0, 4)} us`);
-        setTimeout(updateTime, 1000);
+        
     };
 
     updateTime();
@@ -115,7 +116,7 @@ define('nestedForLoopModule', function (now$) {
 		outerArray$: ComputedObservable(now$, function (now) {
 			let arr = [];
 			x++;
-			for (let i = 0; i < 10 + x; i++) {
+			for (let i = 0; i < 10; i++) {
 				arr[i] = getInnerArray(x + i);
 			}
 			return arr;

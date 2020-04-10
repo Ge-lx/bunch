@@ -1,7 +1,7 @@
 /* bnc.js - bunch node controller */
 
 (function () {
-	const bnc_bunch = bunch({ debug: true });
+	const bnc_bunch = bunch({ debug: false });
 	const { define, resolve, load, Observable, ComputedObservable, debug } = bnc_bunch;
 
 	const ID = (function () {
@@ -199,7 +199,9 @@
 			$rebuildSubtree,
 			$rebuild,
 			$controller (selector, handler) {
-				console.log(`$controller registered for selector ${selector}`);
+				if (debug) {
+					console.log(`$controller registered for selector ${selector}`);	
+				}
 				controllers.push({
 					selector,
 					handler: (element, nearest) => {
@@ -214,7 +216,9 @@
 				$refresh();
 			},
 			$directive (selector, handler) { 
-				console.log(`$directive registered for selector ${selector}`);
+				if (debug) {
+					console.log(`$directive registered for selector ${selector}`);	
+				}
 				directives.push({
 					selector,
 					handler: (element, nearest) => Promise.try(handler, element, nearest)
