@@ -255,7 +255,7 @@
 					}
 					return scope;
 				})
-				.catch(error => console.error(`Failed to load module ${moduleName}`));
+				.catch(error => console.error(`Failed to load module ${moduleName} `, error));
 		});
 	});
 
@@ -289,7 +289,8 @@
 					.catch(error => console.error(`bnc-router - could not find ${stateName}`));
 			}, false);
 
-			return updateScope($nearest.$get(identifier))
+			const stateName = $nearest.$get(identifier)
+			return updateScope(stateName)
 				.catch(error => console.error(`bnc-router - could not find ${stateName}`));
 		});
 	});
