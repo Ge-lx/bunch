@@ -8,9 +8,9 @@
 
 		<!-- <link href="https://fonts.googleapis.com/css?family=Quicksand:300,400,600&display=swap&subset=latin-ext" rel="stylesheet"> -->
 
-   		<!-- <script type="text/javascript" src="../bunch.js"></script>
-   		<script type="text/javascript" src="../bnc.js"></script> -->
-   		<script type="text/javascript" src="../bnc.min.js"></script>
+   		<script type="text/javascript" src="../bunch.js"></script>
+   		<script type="text/javascript" src="../bnc.js"></script>
+   		<!-- <script type="text/javascript" src="../bnc.min.js"></script> -->
    		<script type="text/javascript" src="./user.js"></script>
    		<style type="text/css">
 		</style>
@@ -20,7 +20,6 @@
 			<div id="main_content">
 				<bnc-module id="tracker_container" name="testModule">
 					<div class="tracker_row">
-						<!-- <p bnc-if="showHello">Hi there :)</p> -->
 						<p bnc-bind="nowString"></p>
 					</div>
 
@@ -30,6 +29,14 @@
 						<p bnc-bind="value"></p>
 					</div>
 				</div>
+
+				<bnc-module name="nestedForLoopModule">
+					<div bnc-for="innerArray in outerArray" class="row">
+						<div bnc-for="value in innerArray">
+							<span bnc-bind="value"></span>
+						</div>
+					</div>
+				</bnc-module>
 			</div>
 		</bnc-root>
 	</body>

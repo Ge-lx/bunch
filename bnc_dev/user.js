@@ -24,7 +24,8 @@ define('testModule', function (now$) {
 			hello: 'world!',
 			showHello: last,
 			nowString: 'Hello, world! at ' + now,
-			testArr: [a + 1, a + 2, a + 3, 4, 5, 6, 7, 8]
+			testArr: [a + 1, a + 2, a + 3, 4, 5, 6, 7, 8],
+			testObj: { a: 'hi', b: [1, 2, 3, 4], bool: last }
 		};
 	});
 });
@@ -34,3 +35,13 @@ define('test2', function () {
 		testArr: [1, 2, 3, 4, 5, 6, 7, 8]
 	};
 });
+
+
+define('nestedForLoopModule', function () {
+	const getInnerArray = () => [1, 2, 3, 4];
+
+	return {
+		outerArray: [getInnerArray(), getInnerArray(), getInnerArray(), getInnerArray()]
+	};
+});
+	
