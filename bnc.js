@@ -26,7 +26,6 @@
 			}
 		};
 	}());
-	};
 
 	const bnc_scope = ($, $parent) => {
 		const onDestroyCallbacks = [];
