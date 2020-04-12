@@ -7,15 +7,10 @@ const bunch = (function () {
 	const Observable = (initialValue, readOnly = false) => {
 		if (isObserable(initialValue)) {
 			if (readOnly) {
+				const { onChange, stream, when } = initialValue;
 				return {
 					_$: true,
-					isObserable,
-					onChange: callback => {
-						return initialValue.onChange(callback);
-					},
-					stream: callback => {
-						return initialValue.stream(callback);
-					},
+					isObserable, onChange, stream, when,
 					get value () {
 						return initialValue.value;
 					}
@@ -37,8 +32,13 @@ const bunch = (function () {
 			};
 		};
 
-		const triggerListeners = (newValue, oldValue) => {
+		const triggerListeners = (value, oldValue) => {
 			listeners.forEach(listener => {
+				if (typeof listener.check === 'function') {
+					if (listener.check(value) !== true) {
+						return;
+					}
+				}
 				// Listeners can overwrite the current change by returning a truthy value to be used for further calls
 				let newValue = listener(value, oldValue)
 				if (newValue) {
@@ -55,9 +55,20 @@ const bunch = (function () {
 				return registerListenerReturnUnbinder(callback);
 			},
 			stream: (callback) => {
-				const unbinder = registerListenerReturnUnbinder(callback);
 				callback(value);
-				return unbinder;
+				return registerListenerReturnUnbinder(callback);
+			},
+			when: (check, callback) => {
+				if (typeof callback !== 'function') {
+					callback = check;
+					check = (a => !!a);
+				}
+				callback.check = check;
+				if (check(value) === true) {
+					callback(value);
+				}
+
+				return registerListenerReturnUnbinder(callback);
 			},
 			trigger: () => triggerListeners(value, value),
 			get value () {
