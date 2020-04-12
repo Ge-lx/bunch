@@ -1,7 +1,7 @@
 /* bnc.js - bunch node controller */
 
 (function () {
-	const bnc_bunch = bunch({ debug: false });
+	const bnc_bunch = bunch({ debug: true });
 	const { define, resolve, load, Observable, ComputedObservable, debug } = bnc_bunch;
 
 	const ID = (function () {
@@ -69,6 +69,7 @@
 		}());
 
 		return {
+			$bnc_scope: true,
 			id: ID(),
 			$,
 			$parent,
@@ -206,9 +207,9 @@
 					selector,
 					handler: (element, nearest) => {
 						return Promise.try(handler, element, nearest)
-							.then(bnc_module => {
-								if (bnc_module) {
-									$link(bnc_module, element);	
+							.then(returnValue => {
+								if (returnValue && returnValue.$bnc_scope === true) {
+									$link(returnValue, element);
 								}
 							});
 					}
@@ -259,28 +260,52 @@
 		});
 	});
 
+	// Todo unify with bnc_state
+	define('bnc_element', (bnc) => {
+		bnc.$controller('bnc-element', (element, $nearest) => {
+			const stateName = element.getAttribute('name');
+			
+			return load(stateName)
+				.then(module$ => {
+					const template = module$.value.$template;
+					if (typeof template !== 'string') {
+						console.error(`bnc-element - ${name} does not define a $template`);
+						return;
+					}
+					element.innerHTML = template;
+
+					const $scope = bnc_scope(module$, $nearest);
+					if (typeof module$.value.$link === 'function') {
+						module$.value.$link($scope, element);
+					}
+					return $scope;
+				})
+				.catch(error => console.error(`bnc-element - could not find ${stateName}`, error));
+		});
+	});
+
 	define('bnc_state', (bnc) => {
 		bnc.$controller('bnc-state', (element, $nearest) => {
 			const identifier = element.getAttribute('name');
 			
-			let currentScope = null;
+			let $scope = null;
 			const updateScope = stateName => load(stateName)
-				.then(module$ => {
-					if (currentScope !== null) {
-						bnc.$destroy(element, true);
-					}
-					currentScope = bnc_scope(module$, $nearest);
-					if (typeof module$.value.$link === 'function') {
-						module$.value.$link(currentScope, element);
-					}
-
+				.then(module$ => {					
 					const template = module$.value.$template;
 					if (typeof template !== 'string') {
-						console.error(`bnc-router - state ${name} does not define a $template`);
+						console.error(`bnc-router - ${name} does not define a $template`);
 						return;
 					}
 					element.innerHTML = template;
-					bnc.$link(currentScope, element);
+
+					if ($scope !== null) {
+						bnc.$destroy(element, true);
+					}
+					$scope = bnc_scope(module$, $nearest);
+					if (typeof module$.value.$link === 'function') {
+						module$.value.$link($scope, element);
+					}
+					bnc.$link($scope, element);
 				});
 			
 			$nearest.$watcher(identifier, stateName => {
@@ -291,7 +316,8 @@
 
 			const stateName = $nearest.$get(identifier)
 			return updateScope(stateName)
-				.catch(error => console.error(`bnc-router - could not find ${stateName}`));
+				.catch(error => console.error(`bnc-router - could not find ${stateName}`))
+				.then(() => null); // We don't want bnc to bind it twice
 		});
 	});
 
@@ -436,7 +462,7 @@
 		});
 	});
 
-	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_state, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
+	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_element, bnc_state, bnc_bind, bnc_css, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
 		bnc.$rebuild();
 	});
 	load('bnc_ready');
