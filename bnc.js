@@ -9,6 +9,11 @@
 		return () => ++id;
 	}());
 
+	const evalInScope = (scope, expression) => {
+	    const evaluator = Function.apply(null, [...Object.keys(scope), 'expr', 'return eval(expr)']);
+	    return evaluator.apply(null, [...Object.values(scope), expression]);
+	};
+
 	(function augmentPromise () {
 		Promise.try = (handler, ...args) => {
 			try {
@@ -58,6 +63,27 @@
 			});
 
 			return (identifier, update, immediate = true) => {
+				if (identifier.includes('.')) {
+					const idx = identifier.indexOf('.');
+					const variable = identifier.slice(0, idx);
+					const expression = identifier.slice(idx + 1, identifier.length);
+
+					const evalAndUpdate = (function (originalUpdate){
+						return (variableValue) => {
+							const evaluated = (function () {
+								try {
+									return evalInScope(variableValue, expression);
+								} catch (error) {
+									console.error('Error while evaluating expression: ', { variable, variableValue, expression, error });
+									return null;
+								}
+							}());
+							originalUpdate(evaluated);
+						};
+					}(update));
+
+					[identifier, update] = [variable, evalAndUpdate];
+				}
 				const watcher = { identifier, update };
 				try {
 					activateWatcher(watcher, immediate);
