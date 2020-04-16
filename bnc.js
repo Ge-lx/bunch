@@ -432,9 +432,13 @@
 
 	define('bnc_css', (bnc) => {
 		return bnc.$directive('[bnc-css]', (element, nearestModule) => {
-			const identifier = element.getAttribute('bcn-css');
-			nearestModule.$watcher(identifier, value => {
-				element.style = value;
+			const attr = element.getAttribute('bnc-css')
+			const pairs = attr.split(',');
+			pairs.forEach(pair => {
+				const [css_prop, identifier] = pair.split(':');
+				nearestModule.$watcher(identifier.trim(), value => {
+					element.style[css_prop.trim()] = value;
+				});
 			});
 		});
 	});
