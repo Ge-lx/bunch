@@ -38,17 +38,23 @@
 			onDestroyCallbacks.push(cb);
 		};
 
+		const compoundScope$ = ComputedObservable([$parent.$, $], (parentScope, thisScope) => {
+			return { ...parentScope, ...thisScope };
+		});
+		onDestroy(compoundScope$.destroy);
+
 		const $registerWatcher = (function (){
 			const registeredWatchers = [];
 			let unbindWatchers = [];
 
-			const activateWatcher = (watcher, immediate = true) => {
-				const value = evalInScope($.value, watcher.expression);
+			const activateWatcher = (watcher) => {
+				let value = evalInScope(compoundScope$.value, watcher.expression);
 				if (isObservable(value)) {
 					const unbind = value.onChange(watcher.update);
 					unbindWatchers.push(unbind);
+					value = value.value;
 				}
-				if (immediate) {
+				if (watcher.immediate) {
 					watcher.update(value);
 				}
 			};
@@ -64,17 +70,13 @@
 			});
 
 			return (expression, update, immediate = true) => {
-				const watcher = { expression, update };
 				try {
-					activateWatcher(watcher, immediate);
+					const watcher = { expression, update, immediate }
+					activateWatcher(watcher);
 					registeredWatchers.push(watcher);
 				} catch (error) {
-					if (error.fileName.endsWith('eval') && error.name === 'ReferenceError' && $parent) {
-						$parent.$watcher(expression, update, immediate);
-					} else {
-						const errorDetails = debug ? { error, scopeValue: $.value, expression } : error;
-						console.error(`Could not evaluate ${expression} `, errorDetails.message);
-					}				
+					const errorDetails = debug ? { error, scope: compoundScope$.value, expression } : error.message;
+					console.error(`Could not evaluate ${expression} `, errorDetails);
 				}	
 			};
 		}());
@@ -82,7 +84,7 @@
 		return {
 			$bnc_scope: true,
 			id: ID(),
-			$,
+			$: compoundScope$,
 			$parent,
 			onDestroy,
 			$watcher: $registerWatcher,
@@ -244,6 +246,7 @@
 		return bnc.$controller('bnc-root', (element) => {
 			return {
 				$bnc_scope: true,
+				$: Observable({ ComputedObservable }),
 				id: 'root',
 				$destroy () {},
 				$watcher (identifier) { console.error(`$watcher for identifier ${identifier} bubbled up to bnc_root.`); },
