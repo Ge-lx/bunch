@@ -1,16 +1,16 @@
 /* bunch.js - compact javascript dependency injection */
 
 const bunch = (function () {
-	const isObserable = value => {
+	const isObservable = value => {
 		return (value && value._$) ? true : false;
 	};
 	const Observable = (initialValue, readOnly = false) => {
-		if (isObserable(initialValue)) {
+		if (isObservable(initialValue)) {
 			if (readOnly) {
 				const { onChange, stream, when } = initialValue;
 				return {
 					_$: true,
-					isObserable, onChange, stream, when,
+					isObservable, onChange, stream, when,
 					get value () {
 						return initialValue.value;
 					}
@@ -50,7 +50,7 @@ const bunch = (function () {
 
 		return {
 			_$: true,
-			isObserable,
+			isObservable,
 			onChange: (callback) => {
 				return registerListenerReturnUnbinder(callback);
 			},
@@ -85,7 +85,7 @@ const bunch = (function () {
 		if (Array.isArray(observablesToWatch) === false) {
 			observablesToWatch = [observablesToWatch];
 		}
-		if (observablesToWatch.every(isObserable) === false) {
+		if (observablesToWatch.every(isObservable) === false) {
 			throw new Error('Cannot watch on non-observable values.');
 		}
 
@@ -317,7 +317,7 @@ const bunch = (function () {
 		define('Observable', function () { return Observable });
 		define('ComputedObservable', function () { return ComputedObservable });
 
-		return { external, define, resolve, load, Observable, ComputedObservable, isObserable, debug: config.debug };
+		return { external, define, resolve, load, Observable, ComputedObservable, isObservable, debug: config.debug };
 	};
 
 	return init;
