@@ -1,8 +1,8 @@
 /* bnc.js - bunch node controller */
 
 (function () {
-	const bnc_bunch = bunch({ debug: true });
-	const { define, resolve, load, Observable, ComputedObservable, debug } = bnc_bunch;
+	const bnc_bunch = bunch({ debug: false });
+	const { define, resolve, load, Observable, ComputedObservable, isObservable, debug } = bnc_bunch;
 
 	const ID = (function () {
 		let id = 1;
@@ -39,57 +39,42 @@
 		};
 
 		const $registerWatcher = (function (){
-			const registerWatchers = [];
+			const registeredWatchers = [];
 			let unbindWatchers = [];
 
 			const activateWatcher = (watcher, immediate = true) => {
-				if ($.value.hasOwnProperty(watcher.identifier)) {
-					const obs = Observable($.value[watcher.identifier]);
-					const unbind = immediate ? obs.stream(watcher.update) : obs.onChange(watcher.update);
+				const value = evalInScope($.value, watcher.expression);
+				if (isObservable(value)) {
+					const unbind = value.onChange(watcher.update);
 					unbindWatchers.push(unbind);
-				} else {
-					throw new Error(`Failed to activate watcher for '${watcher.identifier}' on ${$.value}`);
+				}
+				if (immediate) {
+					watcher.update(value);
 				}
 			};
 
 			const unbindFromObservable = $.onChange(() => {
 				unbindWatchers.forEach(unbind => unbind());
 				unbindWatchers = [];
-				registerWatchers.forEach(watcher => activateWatcher(watcher));
+				registeredWatchers.forEach(watcher => activateWatcher(watcher));
 			});
 			onDestroy(() => {
 				unbindWatchers.forEach(unbind => unbind());
 				unbindFromObservable();
 			});
 
-			return (identifier, update, immediate = true) => {
-				if (identifier.includes('.')) {
-					const idx = identifier.indexOf('.');
-					const variable = identifier.slice(0, idx);
-					const expression = identifier.slice(idx + 1, identifier.length);
-
-					const evalAndUpdate = (function (originalUpdate){
-						return (variableValue) => {
-							const evaluated = (function () {
-								try {
-									return evalInScope(variableValue, expression);
-								} catch (error) {
-									console.error('Error while evaluating expression: ', { variable, variableValue, expression, error });
-									return null;
-								}
-							}());
-							originalUpdate(evaluated);
-						};
-					}(update));
-
-					[identifier, update] = [variable, evalAndUpdate];
-				}
-				const watcher = { identifier, update };
+			return (expression, update, immediate = true) => {
+				const watcher = { expression, update };
 				try {
 					activateWatcher(watcher, immediate);
-					registerWatchers.push(watcher);
+					registeredWatchers.push(watcher);
 				} catch (error) {
-					$parent.$watcher(identifier, update, immediate);
+					if (error.fileName.endsWith('eval') && error.name === 'ReferenceError' && $parent) {
+						$parent.$watcher(expression, update, immediate);
+					} else {
+						const errorDetails = debug ? { error, scopeValue: $.value, expression } : error;
+						console.error(`Could not evaluate ${expression} `, errorDetails);
+					}				
 				}	
 			};
 		}());
