@@ -187,7 +187,7 @@
 		};
 
 		const $rebuild = () => { 
-			const $element = document.querySelector('bnc-root').parentElement
+			const $element = document.querySelector('bnc-root').parentElement;
 			$destroy($element);
 			if (Object.keys(scope_map).length > 0) {
 				console.error('$destory() on $rootElement did not empty scope_map: ', scope_map);
@@ -243,6 +243,7 @@
 	define('bnc_root', (bnc) => {
 		return bnc.$controller('bnc-root', (element) => {
 			return {
+				$bnc_scope: true,
 				id: 'root',
 				$destroy () {},
 				$watcher (identifier) { console.error(`$watcher for identifier ${identifier} bubbled up to bnc_root.`); },
