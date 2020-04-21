@@ -73,7 +73,7 @@
 						$parent.$watcher(expression, update, immediate);
 					} else {
 						const errorDetails = debug ? { error, scopeValue: $.value, expression } : error;
-						console.error(`Could not evaluate ${expression} `, errorDetails);
+						console.error(`Could not evaluate ${expression} `, errorDetails.message);
 					}				
 				}	
 			};
