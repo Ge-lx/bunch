@@ -71,6 +71,7 @@ const bunch = (function () {
 				return registerListenerReturnUnbinder(callback);
 			},
 			trigger: () => triggerListeners(value, value),
+			destroy: () => listeners = [],
 			get value () {
 				return value;
 			},
@@ -95,9 +96,20 @@ const bunch = (function () {
 		}
 
 		const obs$ = Observable(computeValue());
-		observablesToWatch.forEach(obs => obs.onChange(function () {
-			obs$.value = computeValue();
-		}));
+		let unbindObservables = [];
+
+		observablesToWatch.forEach(obs => {
+			const unbind = obs.onChange(() => {
+				obs$.value = computeValue();
+			});
+			unbindObservables.push(unbind);
+		});
+
+		const originalDestroy = obs$.destroy;
+		obs$.destroy = () => {
+			unbindObservables.forEach(unbind => unbind());
+			unbindObservables = [];
+		};
 		return obs$;
 	};
 
