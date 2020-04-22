@@ -503,6 +503,15 @@
 		});
 	});
 
+	define('bnc_if_not', (bnc) => {
+		return bnc.$directive('[bnc-if-not]', (element, nearestModule) => {
+			const identifier = element.getAttribute('bnc-if-not');
+			nearestModule.$watcher(identifier, value => {
+				element.style.display = !value ? '' : 'none';
+			});
+		});
+	});
+
 	define('bnc_template', (bnc, debounce) => {
 		const TEMPLATE_REGEX = /\${[$A-Z_][0-9A-Z_$]*}/gmi
 		const ILLEGAL_PLACEHOLDERS = /\${(?:[0-9A-Z_$]*[^0-9A-Z_${}]+[0-9A-Z_$]*)+}/gi
@@ -533,7 +542,7 @@
 		});
 	});
 
-	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_element, bnc_state, bnc_click, bnc_model, bnc_bind, bnc_css, bnc_attr, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
+	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_element, bnc_state, bnc_click, bnc_model, bnc_bind, bnc_css, bnc_attr, bnc_class, bnc_if, bnc_if_not, bnc_for, bnc_template, bnc_docready) => {
 		bnc.$rebuild();
 	});
 	load('bnc_ready');
