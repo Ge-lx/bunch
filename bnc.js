@@ -430,6 +430,25 @@
 		})
 	});
 
+	define('bnc_model', (bnc) => {
+		return bnc.$directive('[bnc-model]', (element, nearestModule) => {
+			const expression = element.getAttribute('bnc-model');
+			const model$ = nearestModule.$get(expression);
+			if (isObservable(model$) === false) {
+				console.error(`bnc-model: Cannot model on non observable value: `, model$);
+			} else {
+				element.addEventListener('input', ({ target }) => {
+					model$.value = target.value;
+				});
+				model$.stream(value => {
+					if (element.value !== value) {
+						element.value = value;
+					}
+				});
+			}
+		});
+	});
+
 	define('bnc_bind', (bnc) => {
 		return bnc.$directive('[bnc-bind]', (element, nearestModule) => {
 			const identifier = element.getAttribute('bnc-bind');
@@ -514,7 +533,7 @@
 		});
 	});
 
-	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_element, bnc_state, bnc_click, bnc_bind, bnc_css, bnc_attr, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
+	define('bnc_ready', (bnc, bnc_root, bnc_module, bnc_element, bnc_state, bnc_click, bnc_model, bnc_bind, bnc_css, bnc_attr, bnc_class, bnc_if, bnc_for, bnc_template, bnc_docready) => {
 		bnc.$rebuild();
 	});
 	load('bnc_ready');
