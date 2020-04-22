@@ -89,11 +89,12 @@
 			onDestroy,
 			$watcher: $registerWatcher,
 			$destroy () { onDestroyCallbacks.forEach(cb => cb()); },
-			$get (identifier) {
-				if ($.value.hasOwnProperty(identifier)) {
-					return Observable($.value[identifier]).value;
+			$get (expression, noObservable) {
+				let value = evalInScope(compoundScope$.value, expression);
+				if (isObservable(value) && noObservable) {
+					return value.value
 				} else {
-					return $parent.$get(identifier);
+					return value;
 				}
 			}
 		};
@@ -308,7 +309,7 @@
 				.then(module$ => {					
 					const template = module$.value.$template;
 					if (typeof template !== 'string') {
-						console.error(`bnc-router - ${name} does not define a $template`);
+						console.error(`bnc-state - ${name} does not define a $template`);
 						return;
 					}
 					element.innerHTML = template;
@@ -326,12 +327,12 @@
 			$nearest.$watcher(identifier, stateName => {
 				return updateScope(stateName)
 					.then(() => bnc.$rebuildSubtree(element))
-					.catch(error => console.error(`bnc-router - could not find ${stateName}`));
+					.catch(error => console.error(`bnc-state - could not find ${stateName}`));
 			}, false);
 
-			const stateName = $nearest.$get(identifier)
+			const stateName = $nearest.$get(identifier, true)
 			return updateScope(stateName)
-				.catch(error => console.error(`bnc-router - could not find ${stateName}`))
+				.catch(error => console.error(`bnc-state - could not find ${stateName}`))
 				.then(() => null); // We don't want bnc to bind it twice
 		});
 	});
@@ -404,7 +405,7 @@
 					bnc.$rebuildSubtree(element);
 				}, false);
 
-				createChildren(nearestModule.$get(identifier));
+				createChildren(nearestModule.$get(identifier, true));
 				resolve();
 			});
 		});
