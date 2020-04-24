@@ -109,7 +109,7 @@
 			$get$,
 			$destroy () { onDestroyCallbacks.forEach(cb => cb()); },
 			$assign (values) {
-				for (key in values) {
+				for (let key in values) {
 					$.value[key] = values[key];
 				}
 				$.trigger();
@@ -388,7 +388,7 @@
 					const valIdf = objMatch[2];
 
 					createChildren = obj => {
-						for (key in obj) {
+						for (let key in obj) {
 							const scopeObj = {};
 							scopeObj[keyIdf] = key;
 							scopeObj[valIdf] = obj[key];
