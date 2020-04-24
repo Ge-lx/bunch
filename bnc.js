@@ -34,21 +34,30 @@
 
 	const bnc_scope = ($, $parent) => {
 		const onDestroyCallbacks = [];
-		const onDestroy = (cb) => {
+		const $onDestroy = (cb) => {
 			onDestroyCallbacks.push(cb);
 		};
 
 		const compoundScope$ = ComputedObservable([$parent.$, $], (parentScope, thisScope) => {
 			return { ...parentScope, ...thisScope };
 		});
-		onDestroy(compoundScope$.destroy);
+		$onDestroy(compoundScope$.destroy);
 
-		const $registerWatcher = (function (){
+		const evalInCompoundScope = (expression) => {
+			try {
+				return evalInScope(compoundScope$.value, expression);
+			} catch (error) {
+				const errorDetails = debug ? { error, scope: compoundScope$.value, expression } : error.message;
+				console.error(`Could not evaluate ${expression} `, errorDetails);
+			}
+		};
+
+		const $watcher = (function (){
 			const registeredWatchers = [];
 			let unbindWatchers = [];
 
 			const activateWatcher = (watcher) => {
-				let value = evalInScope(compoundScope$.value, watcher.expression);
+				let value = evalInCompoundScope(watcher.expression);
 				if (isObservable(value)) {
 					const unbind = value.onChange(watcher.update);
 					unbindWatchers.push(unbind);
@@ -59,43 +68,51 @@
 				}
 			};
 
-			const unbindFromObservable = $.onChange(() => {
+			const unbindFromObservable = compoundScope$.onChange(() => {
 				unbindWatchers.forEach(unbind => unbind());
 				unbindWatchers = [];
 				registeredWatchers.forEach(watcher => activateWatcher(watcher));
 			});
-			onDestroy(() => {
+			$onDestroy(() => {
 				unbindWatchers.forEach(unbind => unbind());
 				unbindFromObservable();
 			});
 
 			return (expression, update, immediate = true) => {
-				try {
-					const watcher = { expression, update, immediate }
-					activateWatcher(watcher);
-					registeredWatchers.push(watcher);
-				} catch (error) {
-					const errorDetails = debug ? { error, scope: compoundScope$.value, expression } : error.message;
-					console.error(`Could not evaluate ${expression} `, errorDetails);
-				}	
+				const watcher = { expression, update, immediate }
+				activateWatcher(watcher);
+				registeredWatchers.push(watcher);
 			};
 		}());
+
+		const $get = (expression) => {
+			let value = evalInCompoundScope(expression);
+			if (isObservable(value)) {
+				return value.value
+			} else {
+				return value;
+			}
+		};
+
+		const $get$ = (expression) => {
+			return Observable(evalInCompoundScope(expression));
+		};
 
 		return {
 			$bnc_scope: true,
 			id: ID(),
 			$: compoundScope$,
 			$parent,
-			onDestroy,
-			$watcher: $registerWatcher,
+			$onDestroy,
+			$watcher,
+			$get,
+			$get$,
 			$destroy () { onDestroyCallbacks.forEach(cb => cb()); },
-			$get (expression, noObservable) {
-				let value = evalInScope(compoundScope$.value, expression);
-				if (isObservable(value) && noObservable) {
-					return value.value
-				} else {
-					return value;
+			$assign (values) {
+				for (key in values) {
+					$.value[key] = values[key];
 				}
+				$.trigger();
 			}
 		};
 	};
@@ -330,7 +347,7 @@
 					.catch(error => console.error(`bnc-state - could not find ${stateName}`));
 			}, false);
 
-			const stateName = $nearest.$get(identifier, true)
+			const stateName = $nearest.$get(identifier);
 			return updateScope(stateName)
 				.catch(error => console.error(`bnc-state - could not find ${stateName}`))
 				.then(() => null); // We don't want bnc to bind it twice
@@ -357,7 +374,7 @@
 				const createChild = (scopeObj) => {	
 					const childScope = bnc_scope(Observable(scopeObj), nearestModule);
 					const clonedElement = childTemplateElement.cloneNode(true);
-					childScope.onDestroy(() => {
+					childScope.$onDestroy(() => {
 						element.removeChild(clonedElement)
 					});
 					element.appendChild(clonedElement);
@@ -405,7 +422,7 @@
 					bnc.$rebuildSubtree(element);
 				}, false);
 
-				createChildren(nearestModule.$get(identifier, true));
+				createChildren(nearestModule.$get(identifier));
 				resolve();
 			});
 		});
@@ -433,7 +450,7 @@
 	define('bnc_model', (bnc) => {
 		return bnc.$directive('[bnc-model]', (element, nearestModule) => {
 			const expression = element.getAttribute('bnc-model');
-			const model$ = nearestModule.$get(expression);
+			const model$ = nearestModule.$get$(expression);
 			if (isObservable(model$) === false) {
 				console.error(`bnc-model: Cannot model on non observable value: `, model$);
 			} else {

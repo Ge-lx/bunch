@@ -13,7 +13,7 @@ define('router', () => {
 		currentState$,
 		$link: ($scope, element) => {
 			element.addEventListener('click', onClick);
-			$scope.onDestroy(() => element.removeEventListener('click', onClick));
+			$scope.$onDestroy(() => element.removeEventListener('click', onClick));
 		}
 	};
 });
