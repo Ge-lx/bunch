@@ -493,9 +493,14 @@
 			const attr = element.getAttribute('bnc-attr')
 			const pairs = attr.split(',');
 			pairs.forEach(pair => {
-				const [attrName, identifier] = pair.split(':');
+				let [attrName, identifier] = pair.split(':');
 				nearestModule.$watcher(identifier.trim(), value => {
-					element.setAttribute(attrName.trim(), value);
+					attrName = attrName.trim();
+					if (!value || value === '') {
+						element.removeAttribute(attrName);
+					} else {
+						element.setAttribute(attrName, value);
+					}
 				});
 			});
 		});
