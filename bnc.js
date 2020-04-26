@@ -33,6 +33,10 @@
 	}());
 
 	const bnc_scope = ($, $parent) => {
+		const id = ID();
+		if (!$parent) {
+			console.log('Creating scope without parent: ', id, $, $parent);
+		}
 		const onDestroyCallbacks = [];
 		const $onDestroy = (cb) => {
 			onDestroyCallbacks.push(cb);
@@ -100,7 +104,7 @@
 
 		return {
 			$bnc_scope: true,
-			id: ID(),
+			id,
 			$: compoundScope$,
 			$parent,
 			$onDestroy,
@@ -144,6 +148,10 @@
 		const directives = [];
 
 		const $link = (bnc_scope, element) => {
+			if (element.getAttribute('bnc-id')) {
+				console.error('Cannot $link an element with two different scopes!');
+				return;
+			}
 			const idString = `$${bnc_scope.id}`
 			element.setAttribute('bnc-id', idString);
 			scope_map[idString] = bnc_scope;
