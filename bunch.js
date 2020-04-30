@@ -32,18 +32,19 @@ const bunch = (function () {
 			};
 		};
 
-		const triggerListeners = (value, oldValue) => {
+		const triggerListeners = (newValue, oldValue) => {
 			listeners.forEach(listener => {
 				if (typeof listener.check === 'function') {
-					if (listener.check(value) !== true) {
+					if (listener.check(newValue) !== true) {
 						return;
 					}
 				}
-				// Listeners can overwrite the current change by returning a truthy value to be used for further calls
-				let newValue = listener(value, oldValue)
-				if (newValue) {
-					oldValue = value;
-					value = newValue;
+				// Listeners can overwrite the current change by returning a value to be used for further calls
+				let overwriteValue = listener(newValue, oldValue)
+				if (overwriteValue !== undefined) {
+					value = overwriteValue;
+					oldValue = newValue;
+					newValue = value;
 				}
 			});
 		};
