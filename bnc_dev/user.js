@@ -124,3 +124,25 @@ define('nestedForLoopModule', function (now$) {
 	};
 });
 	
+define('sliderValueTest', function () {
+	const sliderConfig = {
+		label: 'Slider Test',
+		max: 20 * 1000,
+		min: 20,
+		step: 1
+	};
+
+	const value$ = Observable(sliderConfig.min);
+	
+	return {
+		$template: `
+			<div class="slider">
+				<h5 bnc-bind="label"></h5>
+				<span bnc-bind="value$"></span>
+				<input type="range" bnc-attr="min: min, max: max, step: step" bnc-model="value$"></input>
+			</div>
+		`,
+		value$,
+		...sliderConfig
+	};
+})

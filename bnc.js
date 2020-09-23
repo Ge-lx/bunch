@@ -445,14 +445,14 @@
 				if (typeof value === 'function') {
 					onClick$.value = value;
 				} else {
-					console.error(`Could not call '${expression}'. Expected function, got: `, value);
+					console.error(`Expression '${expression}' for bnc-click is not callable: `, value);
 				}
 			});
 			
 			element.addEventListener('click', (event) => {
 				onClick$.value(event);
 			});
-		})
+		});
 	});
 
 	define('bnc_model', (bnc) => {
