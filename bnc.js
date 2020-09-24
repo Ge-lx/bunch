@@ -504,7 +504,7 @@
 				let [attrName, identifier] = pair.split(':');
 				nearestModule.$watcher(identifier.trim(), value => {
 					attrName = attrName.trim();
-					if (!value || value === '') {
+					if (value === undefined) {
 						element.removeAttribute(attrName);
 					} else {
 						element.setAttribute(attrName, value);
