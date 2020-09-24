@@ -41,6 +41,18 @@ define('testState', (now$) => {
 	};
 });
 
+define('bla', () => {
+	return world => {
+		return {
+			$template: `
+				<h1>Hello</h1>
+				<p bnc-bind="world"></p>
+			`,
+			world
+		};
+	};
+});
+
 define('anotherState', (now$) => {
 	const normalModuleAttrs = {
 		now$,

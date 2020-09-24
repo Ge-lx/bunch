@@ -304,11 +304,18 @@
 	// Todo unify with bnc_state
 	define('bnc_element', (bnc) => {
 		bnc.$controller('bnc-element', (element, $nearest) => {
-			const stateName = element.getAttribute('name');
+			const name = element.getAttribute('name');
 			
-			return load(stateName)
+			return load(name)
 				.then(module$ => {
-					const template = module$.value.$template;
+					let moduleValue = module$.value;
+
+					if (typeof moduleValue === 'function') {
+						const data = element.getAttribute('data');
+						moduleValue = moduleValue(data);
+					}
+
+					const template = moduleValue.$template;
 					if (typeof template !== 'string') {
 						console.error(`bnc-element - ${name} does not define a $template`);
 						return;
@@ -316,12 +323,16 @@
 					element.innerHTML = template;
 
 					const $scope = bnc_scope(module$, $nearest);
-					if (typeof module$.value.$link === 'function') {
-						module$.value.$link($scope, element);
+					if (moduleValue !== module$.value) {
+						$scope.$assign(moduleValue);
+					}
+
+					if (typeof moduleValue.$link === 'function') {
+						moduleValue.$link($scope, element);
 					}
 					return $scope;
 				})
-				.catch(error => console.error(`bnc-element - could not find ${stateName}`, error));
+				.catch(error => console.error(`bnc-element - could not find ${name}`, error));
 		});
 	});
 
@@ -331,10 +342,17 @@
 			
 			let $scope = null;
 			const updateScope = stateName => load(stateName)
-				.then(module$ => {					
-					const template = module$.value.$template;
+				.then(module$ => {
+					let moduleValue = module$.value;
+
+					if (typeof moduleValue === 'function') {
+						const data = element.getAttribute('data');
+						moduleValue = moduleValue(data);
+					}
+
+					const template = moduleValue.$template;
 					if (typeof template !== 'string') {
-						console.error(`bnc-state - ${name} does not define a $template`);
+						console.error(`bnc-state - ${stateName} does not define a $template`);
 						return;
 					}
 					element.innerHTML = template;
@@ -343,8 +361,12 @@
 						bnc.$destroy(element, true);
 					}
 					$scope = bnc_scope(module$, $nearest);
-					if (typeof module$.value.$link === 'function') {
-						module$.value.$link($scope, element);
+					if (moduleValue !== module$.value) {
+						$scope.$assign(moduleValue);
+					}
+
+					if (typeof moduleValue.$link === 'function') {
+						moduleValue.$link($scope, element);
 					}
 					bnc.$link($scope, element);
 				});
