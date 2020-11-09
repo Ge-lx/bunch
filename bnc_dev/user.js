@@ -132,7 +132,7 @@ define('sliderValueTest', function () {
 		step: 1
 	};
 
-	const value$ = Observable(sliderConfig.min);
+	const value$ = Observable(sliderConfig.max);
 	
 	return {
 		$template: `

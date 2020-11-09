@@ -466,13 +466,15 @@
 			if (isObservable(model$) === false) {
 				console.error(`bnc-model: Cannot model on non observable value: `, model$);
 			} else {
-				element.addEventListener('input', ({ target }) => {
-					model$.value = target.value;
-				});
-				model$.stream(value => {
-					if (element.value !== value) {
-						element.value = value;
-					}
+				setTimeout(() => {
+					element.addEventListener('input', ({ target }) => {
+						model$.value = target.value;
+					});
+					model$.stream(value => {
+						if (element.value !== value) {
+							element.value = value;
+						}
+					});
 				});
 			}
 		});
