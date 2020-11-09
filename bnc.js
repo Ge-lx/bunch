@@ -124,13 +124,17 @@
 	define('debounce', () => {
 	    return (delay, callee) => {
 	        let lastCall = Date.now() - delay;
+	        let finallyTimeout = 0;
 	        return (...args) => {
+	        	clearTimeout(finallyTimeout);
 	            const now = Date.now();
-	            if (now - lastCall > delay) {
+	            const deadTime = delay + lastCall - now;
+
+	            if (deadTime <= 0) {
 	                lastCall = now;
-	                return callee(...args);    
+	                return callee(...args);
 	            } else {
-	                lastCall = now;
+	                finallyTimeout = setTimeout(() => callee(...args), deadTime);
 	            }
 	        };
 	    };
