@@ -513,7 +513,11 @@
 					if (value === undefined) {
 						element.removeAttribute(attrName);
 					} else {
-						element.setAttribute(attrName, value);
+						if (attrName === 'src') {
+							element.src = value;
+						} else {
+							element.setAttribute(attrName, value);
+						}
 					}
 				});
 			});
