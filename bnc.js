@@ -305,63 +305,58 @@
 		});
 	});
 
-	// Todo unify with bnc_state
 	define('bnc_element', (bnc) => {
+		const load_bnc_element = (stateName, element, $nearest) => load(stateName)
+			.then(module$ => {
+				const template = module$.value.$template;
+				if (typeof template !== 'string') {
+					console.error(`bnc-element - ${name} does not define a $template`);
+					return;
+				}
+				element.innerHTML = template;
+
+				const $scope = bnc_scope(module$, $nearest);
+				if (typeof module$.value.$link === 'function') {
+					module$.value.$link($scope, element);
+				}
+				return $scope;
+			})
+			.catch(error => console.error(`bnc-element - could not find ${stateName}`, error));
+
 		bnc.$controller('bnc-element', (element, $nearest) => {
 			const stateName = element.getAttribute('name');
-			
-			return load(stateName)
-				.then(module$ => {
-					const template = module$.value.$template;
-					if (typeof template !== 'string') {
-						console.error(`bnc-element - ${name} does not define a $template`);
-						return;
-					}
-					element.innerHTML = template;
-
-					const $scope = bnc_scope(module$, $nearest);
-					if (typeof module$.value.$link === 'function') {
-						module$.value.$link($scope, element);
-					}
-					return $scope;
-				})
-				.catch(error => console.error(`bnc-element - could not find ${stateName}`, error));
+			return load_bnc_element(stateName, element, $nearest);
 		});
+
+		return { load_bnc_element }
 	});
 
-	define('bnc_state', (bnc) => {
+	define('bnc_state', (bnc, bnc_element) => {
 		bnc.$controller('bnc-state', (element, $nearest) => {
 			const identifier = element.getAttribute('name');
 			
 			let $scope = null;
-			const updateScope = stateName => load(stateName)
-				.then(module$ => {					
-					const template = module$.value.$template;
-					if (typeof template !== 'string') {
-						console.error(`bnc-state - ${name} does not define a $template`);
-						return;
-					}
-					element.innerHTML = template;
-
-					if ($scope !== null) {
-						bnc.$destroy(element, true);
-					}
-					$scope = bnc_scope(module$, $nearest);
-					if (typeof module$.value.$link === 'function') {
-						module$.value.$link($scope, element);
-					}
-					bnc.$link($scope, element);
-				});
+			const updateScope = stateName => {
+				if ($scope !== null) {
+					bnc.$destroy(element, true);
+				}
+				return bnc_element
+					.load_bnc_element(stateName, element, $nearest)
+					.then(scope => {
+						$scope = scope;
+						bnc.$link($scope, element)
+					});
+			}
 			
 			$nearest.$watcher(identifier, stateName => {
 				return updateScope(stateName)
 					.then(() => bnc.$rebuildSubtree(element))
-					.catch(error => console.error(`bnc-state - could not find ${stateName}`));
+					.catch(error => console.error(`bnc-state error:`, error));
 			}, false);
 
 			const stateName = $nearest.$get(identifier);
 			return updateScope(stateName)
-				.catch(error => console.error(`bnc-state - could not find ${stateName}`))
+				.catch(error => console.error(`bnc-state error:`, error))
 				.then(() => null); // We don't want bnc to bind it twice
 		});
 	});
