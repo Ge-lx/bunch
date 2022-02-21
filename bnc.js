@@ -452,7 +452,7 @@
 					console.error(`Expression '${expression}' for bnc-click is not callable: `, value);
 				}
 			});
-			
+
 			element.addEventListener('click', (event) => {
 				onClick$.value(event);
 			});
